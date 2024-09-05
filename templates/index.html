@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Diabetes Prediction</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #343a40; /* Dark background color */
+      color: #ffffff; /* Light text color */
+      padding-top: 50px;
+	
+    }
+	
+    .container {
+      max-width: 600px;
+      background-color: #212529; /* Darker container background */
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .form-control {
+      background-color: #343a40; /* Darker form input background */
+      color: #ffffff; /* Light text color for form input */
+      border-color: #495057; /* Darker border color */
+    }
+    .btn-primary {
+      background-color: #007bff; /* Primary button color */
+      border-color: #007bff; /* Primary button border color */
+    }
+    .btn-primary:hover {
+      background-color: #0056b3; /* Darker hover color for primary button */
+      border-color: #0056b3;
+    }
+    .btn-secondary {
+      background-color: #007bff; /* Blue color same as primary button */
+      border-color: #007bff; /* Border color same as primary button */
+      color: #ffffff; /* Light text color for secondary button */
+    }
+    .btn-secondary:hover {
+      background-color: #0056b3; /* Darker hover color for secondary button */
+      border-color: #0056b3;
+    }
+    .loader {
+      border: 8px solid #343a40; /* Dark loader border */
+      border-top: 8px solid #007bff; /* Primary loader top border */
+    }
+    #output-box {
+      margin-top: 20px;
+      display: none;
+      background-color: #212529; /* Darker output box background */
+      border-color: #007bff; /* Primary output box border color */
+    }
+    #output-text {
+      color: #ffffff; /* Light text color for output text */
+    }
+    h1, h2, h3, h4, h5, h6 {
+      color: #ffffff; /* Light text color for headings */
+    }
+    label {
+      color: #ffffff; /* Light text color for labels */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="text-center">Diabetes Prediction</h1>
+    <form id="prediction-form">
+      <div class="form-group">
+        <label for="pregnancies">Pregnancies (Count):</label>
+        <input type="number" class="form-control" id="pregnancies" name="pregnancies" required>
+      </div>
+      <div class="form-group">
+        <label for="glucose">Glucose (mg/dL):</label>
+        <input type="number" class="form-control" id="glucose" name="glucose" required>
+      </div>
+      <div class="form-group">
+        <label for="blood-pressure">Blood Pressure (mmHg):</label>
+        <input type="number" class="form-control" id="blood-pressure" name="blood-pressure" required>
+      </div>
+      <div class="form-group">
+        <label for="skin-thickness">Skin Thickness (mm):</label>
+        <input type="number" class="form-control" id="skin-thickness" name="skin-thickness" required>
+      </div>
+      <div class="form-group">
+        <label for="insulin">Insulin (IU):</label>
+        <input type="number" class="form-control" id="insulin" name="insulin" required>
+      </div>
+      <div class="form-group">
+        <label for="bmi">BMI:</label>
+        <input type="number" class="form-control" id="bmi" name="bmi" required>
+      </div>
+      <div class="form-group">
+        <label for="diabetes-pedigree-function">Diabetes Pedigree Function:</label>
+        <input type="number" class="form-control" id="diabetes-pedigree-function" name="diabetes-pedigree-function" required>
+      </div>
+      <div class="form-group">
+        <label for="age">Age (Years):</label>
+        <input type="number" class="form-control" id="age" name="age" required>
+      </div>
+      <button id="submit-button" class="btn btn-primary btn-block">Make Prediction</button>
+      <button type="button" id="clear-button" class="btn btn-secondary btn-block">Clear Form</button>
+    </form>
+    <div class="loader" id="loader"></div>
+    <div id="output-box" class="alert alert-info">
+      <h2>Prediction Result:</h2>
+      <p id="output-text"></p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('prediction-form');
+    const submitButton = document.getElementById('submit-button');
+    const clearButton = document.getElementById('clear-button');
+    const loader = document.getElementById('loader');
+    const outputBox = document.getElementById('output-box');
+    const predictionResult = document.getElementById('output-text');
+
+    submitButton.addEventListener('click', (e) => {
+      e.preventDefault();
+      loader.style.display = 'block';
+      outputBox.style.display = 'none';
+      const pregnancies = document.getElementById('pregnancies').value;
+      const glucose = document.getElementById('glucose').value;
+      const bloodPressure = document.getElementById('blood-pressure').value;
+      const skinThickness = document.getElementById('skin-thickness').value;
+      const insulin = document.getElementById('insulin').value;
+      const bmi = document.getElementById('bmi').value;
+      const diabetesPedigreeFunction = document.getElementById('diabetes-pedigree-function').value;
+      const age = document.getElementById('age').value;
+
+      fetch('/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          pregnancies,
+          glucose,
+          bloodPressure,
+          skinThickness,
+          insulin,
+          bmi,
+          diabetesPedigreeFunction,
+          age
+        })
+      })
+      .then(response => response.json())
+      .then((data) => {
+        loader.style.display = 'none';
+        outputBox.style.display = 'block';
+        const prediction = data.prediction;
+        predictionResult.innerHTML = `The patient is ${prediction === 1 ? '' : 'not '}likely to have diabetes.`;
+      })
+      .catch((error) => {
+        loader.style.display = 'none';
+        outputBox.style.display = 'block';
+        console.error('Error:', error);
+        predictionResult.innerHTML = 'Error making prediction.';
+      });
+    });
+
+    clearButton.addEventListener('click', () => {
+      form.reset(); // Reset form fields
+      outputBox.style.display = 'none'; // Hide prediction result
+    });
+  </script>
+</body>
+</html>
